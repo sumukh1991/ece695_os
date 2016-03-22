@@ -320,6 +320,24 @@ struct cfs_rq {
 #endif /* CONFIG_FAIR_GROUP_SCHED */
 };
 
+
+//ECE695 Start
+
+
+struct mycfs_rq {
+  //	struct rb_root tasks_timeline;
+	struct mycfsnode *leftmost;
+  //	struct mycfsnode *rightmost;
+
+	/*
+	 * 'curr' points to currently running entity on this cfs_rq.
+	 * It is set to NULL otherwise (i.e when none are currently running).
+	 */
+	struct sched_mycfs_entity *curr, *next, *last, *skip;
+
+};
+//ECE695 End 
+
 static inline int rt_bandwidth_enabled(void)
 {
 	return sysctl_sched_rt_runtime >= 0;
@@ -422,6 +440,9 @@ struct rq {
 
 	struct cfs_rq cfs;
 	struct rt_rq rt;
+  //ECE695
+	struct mycfs_rq mycfs;
+  //ECE695 End
 
 #ifdef CONFIG_FAIR_GROUP_SCHED
 	/* list of leaf cfs_rq on this cpu: */
@@ -1028,6 +1049,7 @@ struct sched_class {
 extern const struct sched_class stop_sched_class;
 extern const struct sched_class rt_sched_class;
 extern const struct sched_class fair_sched_class;
+extern const struct sched_class mycfs_sched_class;
 extern const struct sched_class idle_sched_class;
 
 

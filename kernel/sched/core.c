@@ -928,7 +928,7 @@ static int effective_prio(struct task_struct *p)
 	return p->prio;
 }
 
-/**
+/*
  * task_curr - is this task currently executing on a CPU?
  * @p: the task in question.
  */
@@ -1143,7 +1143,7 @@ unsigned long wait_task_inactive(struct task_struct *p, long match_state)
 	return ncsw;
 }
 
-/***
+/**
  * kick_process - kick a running thread to enter/exit the kernel
  * @p: the to-be-kicked thread
  *
@@ -1475,7 +1475,7 @@ static void ttwu_queue(struct task_struct *p, int cpu)
 	raw_spin_unlock(&rq->lock);
 }
 
-/**
+/*
  * try_to_wake_up - wake up a thread
  * @p: the thread to be awakened
  * @state: the mask of task states that can be woken
@@ -1547,7 +1547,7 @@ out:
 	return success;
 }
 
-/**
+/*
  * try_to_wake_up_local - try to wake up a local task with rq lock held
  * @p: the thread to be awakened
  *
@@ -1583,7 +1583,7 @@ out:
 	raw_spin_unlock(&p->pi_lock);
 }
 
-/**
+/*
  * wake_up_process - Wake up a specific process
  * @p: The process to be woken up.
  *
@@ -1804,7 +1804,7 @@ void wake_up_new_task(struct task_struct *p)
 
 #ifdef CONFIG_PREEMPT_NOTIFIERS
 
-/**
+/*
  * preempt_notifier_register - tell me when current is being preempted & rescheduled
  * @notifier: notifier struct to register
  */
@@ -1814,7 +1814,7 @@ void preempt_notifier_register(struct preempt_notifier *notifier)
 }
 EXPORT_SYMBOL_GPL(preempt_notifier_register);
 
-/**
+/*
  * preempt_notifier_unregister - no longer interested in preemption notifications
  * @notifier: notifier struct to unregister
  *
@@ -1858,7 +1858,7 @@ fire_sched_out_preempt_notifiers(struct task_struct *curr,
 
 #endif /* CONFIG_PREEMPT_NOTIFIERS */
 
-/**
+/*
  * prepare_task_switch - prepare to switch tasks
  * @rq: the runqueue preparing to switch
  * @prev: the current task that is being switched out
@@ -1883,7 +1883,7 @@ prepare_task_switch(struct rq *rq, struct task_struct *prev,
 	prepare_arch_switch(next);
 }
 
-/**
+/*
  * finish_task_switch - clean up after a task-switch
  * @rq: runqueue associated with task-switch
  * @prev: the thread we just switched away from.
@@ -1975,7 +1975,7 @@ static inline void post_schedule(struct rq *rq)
 
 #endif
 
-/**
+/*
  * schedule_tail - first thing a freshly forked thread must call.
  * @prev: the thread we just switched away from.
  */
@@ -2158,7 +2158,7 @@ static unsigned long calc_load_update;
 unsigned long avenrun[3];
 EXPORT_SYMBOL(avenrun); /* should be removed */
 
-/**
+/*
  * get_avenrun - get the load average array
  * @loads:	pointer to dest load array
  * @offset:	offset to add
@@ -2318,7 +2318,7 @@ static long calc_load_fold_idle(void)
 	return delta;
 }
 
-/**
+/*
  * fixed_power_int - compute: x^n, in O(log n) time
  *
  * @x:         base of the power
@@ -2782,7 +2782,7 @@ void scheduler_tick(void)
 }
 
 #ifdef CONFIG_NO_HZ_FULL
-/**
+/*
  * scheduler_tick_max_deferment
  *
  * Keep at least one tick per second when a single
@@ -3097,7 +3097,7 @@ asmlinkage void __sched schedule_user(void)
 }
 #endif
 
-/**
+/*
  * schedule_preempt_disabled - called with preemption disabled
  *
  * Returns with preemption disabled. Note: preempt_count must be 1
@@ -3205,7 +3205,7 @@ static void __wake_up_common(wait_queue_head_t *q, unsigned int mode,
 	}
 }
 
-/**
+/*
  * __wake_up - wake up threads blocked on a waitqueue.
  * @q: the waitqueue
  * @mode: which threads
@@ -3241,7 +3241,7 @@ void __wake_up_locked_key(wait_queue_head_t *q, unsigned int mode, void *key)
 }
 EXPORT_SYMBOL_GPL(__wake_up_locked_key);
 
-/**
+/*
  * __wake_up_sync_key - wake up threads blocked on a waitqueue.
  * @q: the waitqueue
  * @mode: which threads
@@ -3285,7 +3285,7 @@ void __wake_up_sync(wait_queue_head_t *q, unsigned int mode, int nr_exclusive)
 }
 EXPORT_SYMBOL_GPL(__wake_up_sync);	/* For internal use only */
 
-/**
+/*
  * complete: - signals a single thread waiting on this completion
  * @x:  holds the state of this particular completion
  *
@@ -3308,7 +3308,7 @@ void complete(struct completion *x)
 }
 EXPORT_SYMBOL(complete);
 
-/**
+/*
  * complete_all: - signals all threads waiting on this completion
  * @x:  holds the state of this particular completion
  *
@@ -3378,7 +3378,7 @@ wait_for_common_io(struct completion *x, long timeout, int state)
 	return __wait_for_common(x, io_schedule_timeout, timeout, state);
 }
 
-/**
+/*
  * wait_for_completion: - waits for completion of a task
  * @x:  holds the state of this particular completion
  *
@@ -3394,7 +3394,7 @@ void __sched wait_for_completion(struct completion *x)
 }
 EXPORT_SYMBOL(wait_for_completion);
 
-/**
+/*
  * wait_for_completion_timeout: - waits for completion of a task (w/timeout)
  * @x:  holds the state of this particular completion
  * @timeout:  timeout value in jiffies
@@ -3413,7 +3413,7 @@ wait_for_completion_timeout(struct completion *x, unsigned long timeout)
 }
 EXPORT_SYMBOL(wait_for_completion_timeout);
 
-/**
+/*
  * wait_for_completion_io: - waits for completion of a task
  * @x:  holds the state of this particular completion
  *
@@ -3427,7 +3427,7 @@ void __sched wait_for_completion_io(struct completion *x)
 }
 EXPORT_SYMBOL(wait_for_completion_io);
 
-/**
+/*
  * wait_for_completion_io_timeout: - waits for completion of a task (w/timeout)
  * @x:  holds the state of this particular completion
  * @timeout:  timeout value in jiffies
@@ -3446,7 +3446,7 @@ wait_for_completion_io_timeout(struct completion *x, unsigned long timeout)
 }
 EXPORT_SYMBOL(wait_for_completion_io_timeout);
 
-/**
+/*
  * wait_for_completion_interruptible: - waits for completion of a task (w/intr)
  * @x:  holds the state of this particular completion
  *
@@ -3464,7 +3464,7 @@ int __sched wait_for_completion_interruptible(struct completion *x)
 }
 EXPORT_SYMBOL(wait_for_completion_interruptible);
 
-/**
+/*
  * wait_for_completion_interruptible_timeout: - waits for completion (w/(to,intr))
  * @x:  holds the state of this particular completion
  * @timeout:  timeout value in jiffies
@@ -3483,7 +3483,7 @@ wait_for_completion_interruptible_timeout(struct completion *x,
 }
 EXPORT_SYMBOL(wait_for_completion_interruptible_timeout);
 
-/**
+/*
  * wait_for_completion_killable: - waits for completion of a task (killable)
  * @x:  holds the state of this particular completion
  *
@@ -3501,7 +3501,7 @@ int __sched wait_for_completion_killable(struct completion *x)
 }
 EXPORT_SYMBOL(wait_for_completion_killable);
 
-/**
+/*
  * wait_for_completion_killable_timeout: - waits for completion of a task (w/(to,killable))
  * @x:  holds the state of this particular completion
  * @timeout:  timeout value in jiffies
@@ -3521,7 +3521,7 @@ wait_for_completion_killable_timeout(struct completion *x,
 }
 EXPORT_SYMBOL(wait_for_completion_killable_timeout);
 
-/**
+/*
  *	try_wait_for_completion - try to decrement a completion without blocking
  *	@x:	completion structure
  *
@@ -3548,7 +3548,7 @@ bool try_wait_for_completion(struct completion *x)
 }
 EXPORT_SYMBOL(try_wait_for_completion);
 
-/**
+/*
  *	completion_done - Test to see if a completion has any waiters
  *	@x:	completion structure
  *
@@ -3785,7 +3785,7 @@ SYSCALL_DEFINE1(nice, int, increment)
 
 #endif
 
-/**
+/*
  * task_prio - return the priority value of a given task.
  * @p: the task in question.
  *
@@ -3798,7 +3798,7 @@ int task_prio(const struct task_struct *p)
 	return p->prio - MAX_RT_PRIO;
 }
 
-/**
+/*
  * task_nice - return the nice value of a given task.
  * @p: the task in question.
  */
@@ -3808,7 +3808,7 @@ int task_nice(const struct task_struct *p)
 }
 EXPORT_SYMBOL(task_nice);
 
-/**
+/*
  * idle_cpu - is a given cpu idle currently?
  * @cpu: the processor in question.
  */
@@ -3830,7 +3830,7 @@ int idle_cpu(int cpu)
 	return 1;
 }
 
-/**
+/*
  * idle_task - return the idle task for a given cpu.
  * @cpu: the processor in question.
  */
@@ -3839,7 +3839,7 @@ struct task_struct *idle_task(int cpu)
 	return cpu_rq(cpu)->idle;
 }
 
-/**
+/*
  * find_process_by_pid - find a process with a matching PID value.
  * @pid: the pid in question.
  */
@@ -3870,8 +3870,16 @@ __setscheduler(struct rq *rq, struct task_struct *p, int policy, int prio)
 			}
 #endif
 	}
-	else
-		p->sched_class = &fair_sched_class;
+//        else if(policy == SCHED_FAIR)
+//          p->sched_class = &fair_sched_class;
+	else if(policy == SCHED_MYCFS) {
+	  printk(KERN_ALERT "DEBUG Swtiching class to mycfs class\n");
+          //          p->sched_class = &fair_sched_class;
+          p->sched_class = &mycfs_sched_class;
+        }
+	else 
+          p->sched_class = &fair_sched_class;
+
 	set_load_weight(p);
 }
 
@@ -3900,6 +3908,7 @@ static int __sched_setscheduler(struct task_struct *p, int policy,
 	struct rq *rq;
 	int reset_on_fork;
 
+  printk(KERN_ALERT "DEBUG inside __sched_setscheduler\n");
 	/* may grab non-irq protected spin_locks */
 	BUG_ON(in_interrupt());
 recheck:
@@ -3912,10 +3921,11 @@ recheck:
 		policy &= ~SCHED_RESET_ON_FORK;
 
 		if (policy != SCHED_FIFO && policy != SCHED_RR &&
-				policy != SCHED_NORMAL && policy != SCHED_BATCH &&
+				policy != SCHED_NORMAL && policy != SCHED_BATCH && policy != SCHED_MYCFS &&
 				policy != SCHED_IDLE)
 			return -EINVAL;
 	}
+        printk(KERN_ALERT "DEBUG inside __sched_setscheduler 1\n");
 
 	/*
 	 * Valid priorities for SCHED_FIFO and SCHED_RR are
@@ -3929,6 +3939,7 @@ recheck:
 	if (rt_policy(policy) != (param->sched_priority != 0))
 		return -EINVAL;
 
+        printk(KERN_ALERT "DEBUG inside __sched_setscheduler 2\n");
 	/*
 	 * Allow unprivileged RT tasks to decrease priority:
 	 */
@@ -3947,6 +3958,7 @@ recheck:
 				return -EPERM;
 		}
 
+                printk(KERN_ALERT "DEBUG inside __sched_setscheduler 3\n");
 		/*
 		 * Treat SCHED_IDLE as nice 20. Only allow a switch to
 		 * SCHED_NORMAL if the RLIMIT_NICE would normally permit it.
@@ -3956,6 +3968,7 @@ recheck:
 				return -EPERM;
 		}
 
+                printk(KERN_ALERT "DEBUG inside __sched_setscheduler 4\n");
 		/* can't change other user's priorities */
 		if (!check_same_owner(p))
 			return -EPERM;
@@ -3967,8 +3980,10 @@ recheck:
 
 	if (user) {
 		retval = security_task_setscheduler(p);
-		if (retval)
-			return retval;
+                printk(KERN_ALERT "DEBUG inside __sched_setscheduler 5, retval = %d\n",retval);
+		if (retval){
+                  printk(KERN_ALERT "\nHERE\n");
+                  return retval;}
 	}
 
 	/*
@@ -3994,6 +4009,7 @@ recheck:
 	if (unlikely(policy == p->policy && (!rt_policy(policy) ||
 			param->sched_priority == p->rt_priority))) {
 		task_rq_unlock(rq, p, &flags);
+                printk(KERN_ALERT "DEBUG inside __sched_setscheduler 6\n");
 		return 0;
 	}
 
@@ -4035,7 +4051,8 @@ recheck:
 		p->sched_class->set_curr_task(rq);
 	if (on_rq)
 		enqueue_task(rq, p, 0);
-
+        
+        printk(KERN_ALERT "Outside here\n");
 	check_class_changed(rq, p, prev_class, oldprio);
 	task_rq_unlock(rq, p, &flags);
 
@@ -4044,7 +4061,7 @@ recheck:
 	return 0;
 }
 
-/**
+/*
  * sched_setscheduler - change the scheduling policy and/or RT priority of a thread.
  * @p: the task in question.
  * @policy: new policy.
@@ -4055,11 +4072,12 @@ recheck:
 int sched_setscheduler(struct task_struct *p, int policy,
 		       const struct sched_param *param)
 {
+  printk(KERN_ALERT "Calling setschduler with policy %d\n",policy);
 	return __sched_setscheduler(p, policy, param, true);
 }
 EXPORT_SYMBOL_GPL(sched_setscheduler);
 
-/**
+/*
  * sched_setscheduler_nocheck - change the scheduling policy and/or RT priority of a thread from kernelspace.
  * @p: the task in question.
  * @policy: new policy.
@@ -4098,7 +4116,7 @@ do_sched_setscheduler(pid_t pid, int policy, struct sched_param __user *param)
 	return retval;
 }
 
-/**
+/*
  * sys_sched_setscheduler - set/change the scheduler policy and RT priority
  * @pid: the pid in question.
  * @policy: new policy.
@@ -4114,7 +4132,7 @@ SYSCALL_DEFINE3(sched_setscheduler, pid_t, pid, int, policy,
 	return do_sched_setscheduler(pid, policy, param);
 }
 
-/**
+/*
  * sys_sched_setparam - set/change the RT priority of a thread
  * @pid: the pid in question.
  * @param: structure containing the new RT priority.
@@ -4124,7 +4142,7 @@ SYSCALL_DEFINE2(sched_setparam, pid_t, pid, struct sched_param __user *, param)
 	return do_sched_setscheduler(pid, -1, param);
 }
 
-/**
+/*
  * sys_sched_getscheduler - get the policy (scheduling class) of a thread
  * @pid: the pid in question.
  */
@@ -4149,7 +4167,7 @@ SYSCALL_DEFINE1(sched_getscheduler, pid_t, pid)
 	return retval;
 }
 
-/**
+/*
  * sys_sched_getparam - get the RT priority of a thread
  * @pid: the pid in question.
  * @param: structure containing the RT priority.
@@ -4272,7 +4290,7 @@ static int get_user_cpu_mask(unsigned long __user *user_mask_ptr, unsigned len,
 	return copy_from_user(new_mask, user_mask_ptr, len) ? -EFAULT : 0;
 }
 
-/**
+/*
  * sys_sched_setaffinity - set the cpu affinity of a process
  * @pid: pid of the process
  * @len: length in bytes of the bitmask pointed to by user_mask_ptr
@@ -4323,7 +4341,7 @@ out_unlock:
 	return retval;
 }
 
-/**
+/*
  * sys_sched_getaffinity - get the cpu affinity of a process
  * @pid: pid of the process
  * @len: length in bytes of the bitmask pointed to by user_mask_ptr
@@ -4357,7 +4375,7 @@ SYSCALL_DEFINE3(sched_getaffinity, pid_t, pid, unsigned int, len,
 	return ret;
 }
 
-/**
+/*
  * sys_sched_yield - yield the current processor to other threads.
  *
  * This function yields the current CPU to other tasks. If there are no
@@ -4448,7 +4466,7 @@ int __sched __cond_resched_softirq(void)
 }
 EXPORT_SYMBOL(__cond_resched_softirq);
 
-/**
+/*
  * yield - yield the current processor to other threads.
  *
  * Do not ever use this function, there's a 99% chance you're doing it wrong.
@@ -4477,7 +4495,7 @@ void __sched yield(void)
 }
 EXPORT_SYMBOL(yield);
 
-/**
+/*
  * yield_to - yield the current processor to another thread in
  * your thread group, or accelerate that thread toward the
  * processor it's on.
@@ -4586,7 +4604,7 @@ long __sched io_schedule_timeout(long timeout)
 	return ret;
 }
 
-/**
+/*
  * sys_sched_get_priority_max - return maximum RT priority.
  * @policy: scheduling class.
  *
@@ -4611,7 +4629,7 @@ SYSCALL_DEFINE1(sched_get_priority_max, int, policy)
 	return ret;
 }
 
-/**
+/*
  * sys_sched_get_priority_min - return minimum RT priority.
  * @policy: scheduling class.
  *
@@ -4635,7 +4653,7 @@ SYSCALL_DEFINE1(sched_get_priority_min, int, policy)
 	return ret;
 }
 
-/**
+/*
  * sys_sched_rr_get_interval - return the default timeslice of a process.
  * @pid: pid of the process.
  * @interval: userspace pointer to the timeslice value.
@@ -4756,7 +4774,7 @@ void __cpuinit init_idle_bootup_task(struct task_struct *idle)
 	idle->sched_class = &idle_sched_class;
 }
 
-/**
+/*
  * init_idle - set up an idle thread for a given CPU
  * @idle: task in question
  * @cpu: cpu the idle task belongs to
@@ -7241,7 +7259,7 @@ void normalize_rt_tasks(void)
  * under any other configuration.
  */
 
-/**
+/*
  * curr_task - return the current task for a given cpu.
  * @cpu: the processor in question.
  *
@@ -7255,7 +7273,7 @@ struct task_struct *curr_task(int cpu)
 #endif /* defined(CONFIG_IA64) || defined(CONFIG_KGDB_KDB) */
 
 #ifdef CONFIG_IA64
-/**
+/*
  * set_curr_task - set the current task for a given cpu.
  * @cpu: the processor in question.
  * @p: the task pointer to set.

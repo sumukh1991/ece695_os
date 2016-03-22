@@ -37,6 +37,8 @@
 #define SCHED_FIFO		1
 #define SCHED_RR		2
 #define SCHED_BATCH		3
+//ECE695
+#define SCHED_MYCFS		4
 /* SCHED_ISO: reserved but not implemented yet */
 #define SCHED_IDLE		5
 /* Can be ORed in to make sure the process is reverted back to SCHED_NORMAL on fork */

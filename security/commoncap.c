@@ -783,7 +783,7 @@ static int cap_safe_nice(struct task_struct *p)
 	return 0;
 }
 
-/**
+/*
  * cap_task_setscheduler - Detemine if scheduler policy change is permitted
  * @p: The task to affect
  *
@@ -795,7 +795,7 @@ int cap_task_setscheduler(struct task_struct *p)
 	return cap_safe_nice(p);
 }
 
-/**
+/*
  * cap_task_ioprio - Detemine if I/O priority change is permitted
  * @p: The task to affect
  * @ioprio: The I/O priority to set
@@ -808,7 +808,7 @@ int cap_task_setioprio(struct task_struct *p, int ioprio)
 	return cap_safe_nice(p);
 }
 
-/**
+/*
  * cap_task_ioprio - Detemine if task priority change is permitted
  * @p: The task to affect
  * @nice: The nice value to set
@@ -836,7 +836,7 @@ static long cap_prctl_drop(struct cred *new, unsigned long cap)
 	return 0;
 }
 
-/**
+/*
  * cap_task_prctl - Implement process control functions for this security module
  * @option: The process control function requested
  * @arg2, @arg3, @arg4, @arg5: The argument data for this function

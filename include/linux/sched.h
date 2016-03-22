@@ -1047,6 +1047,38 @@ struct sched_rt_entity {
 #endif
 };
 
+//ECE695
+struct mycfsnode {
+  unsigned long color;
+  struct mycfsnode* next;
+};
+
+
+struct sched_mycfs_entity {
+	struct load_weight	load;		/* for load-balancing */
+	struct mycfsnode	run_node;
+	struct list_head	group_node;
+	unsigned int		on_rq;
+
+	u64			exec_start;
+	u64			sum_exec_runtime;
+	u64			vruntime;
+	u64			prev_sum_exec_runtime;
+
+	u64			nr_migrations;
+
+	struct mycfs_rq		*mycfs_rq;
+
+//#ifdef CONFIG_FAIR_GROUP_SCHED
+//        struct sched_entity	*parent;
+//        /* rq on which this entity is (to be) queued: */
+//        struct cfs_rq		*cfs_rq;
+//        /* rq "owned" by this entity/group: */
+//        struct cfs_rq		*my_q;
+//#endif
+};
+//ECE695 - END
+
 
 struct rcu_node;
 
@@ -1075,6 +1107,9 @@ struct task_struct {
 	const struct sched_class *sched_class;
 	struct sched_entity se;
 	struct sched_rt_entity rt;
+//ECE695
+  	struct sched_mycfs_entity mycfs_se;
+//ECE695 - END
 #ifdef CONFIG_CGROUP_SCHED
 	struct task_group *sched_task_group;
 #endif
