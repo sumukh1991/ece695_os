@@ -1049,7 +1049,7 @@ struct sched_rt_entity {
 
 //ECE695
 struct mycfsnode {
-  unsigned long color;
+  unsigned long color ;
   struct mycfsnode* next;
 };
 

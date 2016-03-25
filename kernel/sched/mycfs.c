@@ -175,6 +175,7 @@ static inline struct mycfs_rq *mycfs_rq_of(struct sched_mycfs_entity *se)
   
   return &rq->mycfs;
 }
+
 static inline u64 max_vruntime(u64 max_vruntime, u64 vruntime)
 {
 }
@@ -198,11 +199,13 @@ static void update_min_vruntime(struct mycfs_rq *cfs_rq)
 static void __mycfs_enqueue_entity(struct mycfs_rq *cfs_rq, struct sched_mycfs_entity *se)
 {
 	struct mycfsnode *link = &cfs_rq->leftmost;
+	struct mycfsnode *link_prev = &cfs_rq->leftmost;
 	struct mycfsnode *parent = NULL;
 	struct sched_mycfs_entity *entry;
 	int leftmost = 1;
 
-        printk(KERN_ALERT "DEBUG Inside enqueue\n");
+        printk(KERN_ALERT "DEBUG MYCFS initial link is %x\n",link);
+        printk(KERN_ALERT "DEBUG MYCFS initial link->next is %x\n",link->next);
 
 	/*
 	 * Find the right place in the rbtree:
@@ -221,21 +224,32 @@ static void __mycfs_enqueue_entity(struct mycfs_rq *cfs_rq, struct sched_mycfs_e
 //        		leftmost = 0;
 //        	}
 
+          link_prev = link;
+          printk(KERN_ALERT "DEBUG MYCFS in loop link->next is %x\n",link->next);
           link = link->next;
           //          if(link)
           leftmost = 0;
 	}
 
+        printk(KERN_ALERT "DEBUG MYCFS out of while statement\n");
+        printk(KERN_ALERT "DEBUG MYCFS now prev link is %x\n",link_prev);
+
 	/*
 	 * Maintain a cache of leftmost tree entries (it is frequently
 	 * used):
 	 */
-	if (leftmost)
-		cfs_rq->leftmost = &se->run_node;
+	if (leftmost){
+          printk(KERN_ALERT "DEBUG MYCFS near end of while statement\n");
+          printk(KERN_ALERT "DEBUG MYCFS near end prev link is %x\n",link_prev);
+          cfs_rq->leftmost = &se->run_node;
+        }
+        else {
+          link_prev->next = &se->run_node;
+        }
+          se->run_node.next=NULL;
 
 //        rb_link_node(&se->run_node, parent, link);
 //        rb_insert_color(&se->run_node, &cfs_rq->tasks_timeline);
-        link = &se->run_node;
 }
 
 static void __mycfs_dequeue_entity(struct mycfs_rq *cfs_rq, struct sched_mycfs_entity *se)
@@ -593,7 +607,7 @@ __init void init_sched_mycfs_class(void)
 void init_mycfs_rq(struct mycfs_rq *cfs_rq)
 {
 	struct mycfsnode a;
-	cfs_rq->leftmost = &a; 
+	cfs_rq->leftmost = NULL; 
 	printk(KERN_ALERT "Debug: inside init_mycfs_rq\n");
 	//	cfs_rq->min_vruntime = (u64)(-(1LL << 20));
 }
@@ -634,12 +648,20 @@ enqueue_task_mycfs(struct rq *rq, struct task_struct *p, int flags)
 {
 	struct mycfs_rq *cfs_rq;
 	struct sched_mycfs_entity *se = &p->mycfs_se;
+        __attribute__((optimize(0))) volatile struct task_struct *proc;
+        __attribute__((optimize(0))) volatile struct rq *rqq;
+        
+        cfs_rq =  &rq->mycfs;
 	printk(KERN_ALERT "Inside enqueue_task_mycfs function\n"); 
 	for_each_sched_entity(se) {
-		printk(KERN_ALERT "Inside...\n"); 
+          printk(KERN_ALERT "Inside for each sched, se = %u\n",se); 
 		if (se->on_rq)
 			break;
-		cfs_rq = mycfs_rq_of(se);
+                proc = mycfs_task_of(se);
+                printk(KERN_ALERT "DEBUG Val of proc is %u\n",proc); 
+                rqq = cpu_rq(0);//task_rq(proc);
+                printk(KERN_ALERT "DEBUG Val of rqq is %u\n",rqq); 
+		cfs_rq = &(rqq->mycfs);
 		mycfs_enqueue_entity(cfs_rq, se, flags);
  
 		/*
@@ -899,9 +921,7 @@ static void set_curr_task_mycfs(struct rq *rq)
 	struct sched_mycfs_entity *se = &rq->curr->se;
  
 	for_each_sched_entity(se) {
-          printk(KERN_ALERT "DEBUG before in  set_curr_task_mycfs\n");
           struct mycfs_rq *cfs_rq = mycfs_rq_of(se);
-          printk(KERN_ALERT "DEBUG  after in set_curr_task_mycfs\n");
  
           set_next_entity(cfs_rq, se);
 		/* ensure bandwidth has been allocated on our new cfs_rq */
@@ -1135,6 +1155,7 @@ static struct task_struct *pick_next_task_mycfs(struct rq *rq)
         struct mycfs_rq *cfs_rq = &rq->mycfs;
         struct sched_mycfs_entity *se;
  
+        printk(KERN_ALERT "DEBUG in pick next task mycs, lefmost = %u\n",cfs_rq->leftmost);
 
 	if (!cfs_rq->leftmost)
 		return NULL;

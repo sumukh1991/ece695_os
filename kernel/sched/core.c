@@ -3874,9 +3874,9 @@ __setscheduler(struct rq *rq, struct task_struct *p, int policy, int prio)
 //          p->sched_class = &fair_sched_class;
 	else if(policy == SCHED_MYCFS) {
 	  printk(KERN_ALERT "DEBUG Swtiching class to mycfs class\n");
-          //          p->sched_class = &fair_sched_class;
-          p->sched_class = &mycfs_sched_class;
-        }
+          //	      p->sched_class = &fair_sched_class;
+		      p->sched_class = &mycfs_sched_class;
+	}
 	else 
           p->sched_class = &fair_sched_class;
 
@@ -3908,7 +3908,7 @@ static int __sched_setscheduler(struct task_struct *p, int policy,
 	struct rq *rq;
 	int reset_on_fork;
 
-  printk(KERN_ALERT "DEBUG inside __sched_setscheduler\n");
+        //  printk(KERN_ALERT "DEBUG inside __sched_setscheduler\n");
 	/* may grab non-irq protected spin_locks */
 	BUG_ON(in_interrupt());
 recheck:
@@ -3925,7 +3925,7 @@ recheck:
 				policy != SCHED_IDLE)
 			return -EINVAL;
 	}
-        printk(KERN_ALERT "DEBUG inside __sched_setscheduler 1\n");
+        //        printk(KERN_ALERT "DEBUG inside __sched_setscheduler 1\n");
 
 	/*
 	 * Valid priorities for SCHED_FIFO and SCHED_RR are
@@ -3939,7 +3939,7 @@ recheck:
 	if (rt_policy(policy) != (param->sched_priority != 0))
 		return -EINVAL;
 
-        printk(KERN_ALERT "DEBUG inside __sched_setscheduler 2\n");
+        //        printk(KERN_ALERT "DEBUG inside __sched_setscheduler 2\n");
 	/*
 	 * Allow unprivileged RT tasks to decrease priority:
 	 */
@@ -3958,7 +3958,7 @@ recheck:
 				return -EPERM;
 		}
 
-                printk(KERN_ALERT "DEBUG inside __sched_setscheduler 3\n");
+                //                printk(KERN_ALERT "DEBUG inside __sched_setscheduler 3\n");
 		/*
 		 * Treat SCHED_IDLE as nice 20. Only allow a switch to
 		 * SCHED_NORMAL if the RLIMIT_NICE would normally permit it.
@@ -3968,7 +3968,7 @@ recheck:
 				return -EPERM;
 		}
 
-                printk(KERN_ALERT "DEBUG inside __sched_setscheduler 4\n");
+                //                printk(KERN_ALERT "DEBUG inside __sched_setscheduler 4\n");
 		/* can't change other user's priorities */
 		if (!check_same_owner(p))
 			return -EPERM;
@@ -3980,7 +3980,7 @@ recheck:
 
 	if (user) {
 		retval = security_task_setscheduler(p);
-                printk(KERN_ALERT "DEBUG inside __sched_setscheduler 5, retval = %d\n",retval);
+                //                printk(KERN_ALERT "DEBUG inside __sched_setscheduler 5, retval = %d\n",retval);
 		if (retval){
                   printk(KERN_ALERT "\nHERE\n");
                   return retval;}
@@ -4009,7 +4009,7 @@ recheck:
 	if (unlikely(policy == p->policy && (!rt_policy(policy) ||
 			param->sched_priority == p->rt_priority))) {
 		task_rq_unlock(rq, p, &flags);
-                printk(KERN_ALERT "DEBUG inside __sched_setscheduler 6\n");
+                //                printk(KERN_ALERT "DEBUG inside __sched_setscheduler 6\n");
 		return 0;
 	}
 
@@ -7040,7 +7040,7 @@ void __init sched_init(void)
 		rq->calc_load_active = 0;
 		rq->calc_load_update = jiffies + LOAD_FREQ;
 		init_cfs_rq(&rq->cfs);
-		init_mycfs_rq(&rq->mycfs);
+                init_mycfs_rq(&rq->mycfs);
 		init_rt_rq(&rq->rt, rq);
 #ifdef CONFIG_FAIR_GROUP_SCHED
 		root_task_group.shares = ROOT_TASK_GROUP_LOAD;
