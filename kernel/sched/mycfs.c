@@ -20,7 +20,7 @@ static struct mycfsnode* mycfs_next(struct mycfsnode *node) {
 }
 
 static void mycfs_erase(struct mycfsnode *node) {
-  //  return node->next;
+	//return node->next;
 }
 
 /*
@@ -77,7 +77,7 @@ static void mycfs_erase(struct mycfsnode *node) {
 //CHECK THESE  * have immediate wakeup/sleep latencies.
 //CHECK THESE  */
 //CHECK THESE unsigned int sysctl_sched_wakeup_granularity = 1000000UL;
-//CHECK THESE unsigned int normalized_sysctl_sched_wakeup_granularity = 1000000UL;
+//CHECK THESE unsigned int normalized_sysctl_sched_wakeup_granularity = 1000000UL;sched_mycfs_entity {
 //CHECK THESE  
 //CHECK THESE const_debug unsigned int sysctl_sched_migration_cost = 500000UL;
 //CHECK THESE  
@@ -152,10 +152,10 @@ static inline struct task_struct *mycfs_task_of(struct sched_mycfs_entity *se)
   return container_of(se, struct task_struct, se);
 }
 
-//static inline struct rq *mycfs_rq_of(struct mycfs_rq *cfs_rq)
-//{
-//  return container_of(cfs_rq, struct rq, cfs);
-//}
+static inline struct rq *rq_of(struct mycfs_rq *cfs_rq)
+{
+  return container_of(cfs_rq, struct rq, cfs);
+}
 
 #define entity_is_task(se)	1
 
@@ -169,11 +169,11 @@ static inline struct mycfs_rq *mycfs_task_cfs_rq(struct task_struct *p)
 
 static inline struct mycfs_rq *mycfs_rq_of(struct sched_mycfs_entity *se)
 {
-  return se->mycfs_rq;
-//  struct task_struct *p = mycfs_task_of(se);
-//  struct rq *rq = task_rq(p);
-//  
-//  return &rq->mycfs;
+//  return se->mycfs_rq;
+  struct task_struct *p = mycfs_task_of(se);
+  struct rq *rq = task_rq(p);
+  
+  return &rq->mycfs;
 }
 static inline u64 max_vruntime(u64 max_vruntime, u64 vruntime)
 {
@@ -590,6 +590,13 @@ __init void init_sched_mycfs_class(void)
 
 }
 
+void init_mycfs_rq(struct mycfs_rq *cfs_rq)
+{
+	struct mycfsnode a;
+	cfs_rq->leftmost = &a; 
+	printk(KERN_ALERT "Debug: inside init_mycfs_rq\n");
+	//	cfs_rq->min_vruntime = (u64)(-(1LL << 20));
+}
 
 static void
 mycfs_enqueue_entity(struct mycfs_rq *cfs_rq, struct sched_mycfs_entity *se, int flags)
@@ -627,8 +634,9 @@ enqueue_task_mycfs(struct rq *rq, struct task_struct *p, int flags)
 {
 	struct mycfs_rq *cfs_rq;
 	struct sched_mycfs_entity *se = &p->mycfs_se;
- 
+	printk(KERN_ALERT "Inside enqueue_task_mycfs function\n"); 
 	for_each_sched_entity(se) {
+		printk(KERN_ALERT "Inside...\n"); 
 		if (se->on_rq)
 			break;
 		cfs_rq = mycfs_rq_of(se);
@@ -1085,6 +1093,9 @@ static struct sched_mycfs_entity *pick_next_entity_mycfs(struct mycfs_rq *cfs_rq
 {
         struct sched_mycfs_entity *se = __pick_first_entity_mycfs(cfs_rq);
         struct sched_mycfs_entity *left = se;
+
+
+	printk(KERN_ALERT "Debug: Inside pick_next_entity_mycfs\n");
 // 
 //        /*
 //         * Avoid running the skip buddy, if running something else can
@@ -1111,6 +1122,8 @@ static struct sched_mycfs_entity *pick_next_entity_mycfs(struct mycfs_rq *cfs_rq
 //        clear_buddies(cfs_rq, se);
 	if (cfs_rq->next)// && wakeup_preempt_entity_mycfs(cfs_rq->next, left) < 1)
           se = cfs_rq->next;
+	
+	printk(KERN_ALERT "Debug: Returned from pick_next_entity_mycfs\n");
 
 	return se;
 }

@@ -3,14 +3,14 @@
 #cd tmp/init
 #zcat ../initrd.org | cpio -id
 #cd -
-#export ARCH=arm
-#export CROSS_COMPILE=arm-linux-gnueabi-
-#make -j`getconf _NPROCESSORS_ONLN`
-#make modules
-#make INSTALL_MOD_PATH=~/tmp/init modules_install
-#cd ~/tmp/init
-#find . | cpio -H newc -o | lzma -c > ../my-initrd
-#cd -
+export ARCH=arm
+export CROSS_COMPILE=arm-linux-gnueabi-
+make -j`getconf _NPROCESSORS_ONLN`
+make modules
+make INSTALL_MOD_PATH=~/tmp/init modules_install
+cd ~/tmp/init
+find . | cpio -H newc -o | lzma -c > ../my-initrd
+cd -
 export MYINITRD_PATH=`readlink -f ~/tmp/my-initrd`
 export MYKERNEL_PATH=`readlink -f arch/arm/boot/zImage`
-qemu-system-arm -s -S -M vexpress-a9 -cpu cortex-a9 -kernel ${MYKERNEL_PATH} -initrd ${MYINITRD_PATH} -sd ~/vexpress/vexpress-a9-nano.img -serial stdio -m 1024 -append 'root=/dev/mmcblk0p2 rw mem-1024M raid-noautodetect console=ttyAMA0,38400n8 rootwait vmalloc=256MB devtmpfs.mount=0'
+qemu-system-arm -M vexpress-a9 -cpu cortex-a9 -kernel ${MYKERNEL_PATH} -initrd ${MYINITRD_PATH} -sd ~/vexpress/vexpress-a9-nano.img -serial stdio -m 1024 -append 'root=/dev/mmcblk0p2 rw mem-1024M raid-noautodetect console=ttyAMA0,38400n8 rootwait vmalloc=256MB devtmpfs.mount=0'
