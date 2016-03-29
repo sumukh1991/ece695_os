@@ -1624,6 +1624,16 @@ static void __sched_fork(struct task_struct *p)
 	p->se.vruntime			= 0;
 	INIT_LIST_HEAD(&p->se.group_node);
 
+        //ECE695OS
+	p->mycfs_se.on_rq                 = 0;
+	p->mycfs_se.exec_start            = 0;
+	p->mycfs_se.sum_exec_runtime      = 0;
+	p->mycfs_se.prev_sum_exec_runtime = 0;
+	p->mycfs_se.nr_migrations         = 0;
+	p->mycfs_se.vruntime              = 0;
+        //ECE695OS End
+
+
 /*
  * Load-tracking only depends on SMP, FAIR_GROUP_SCHED dependency below may be
  * removed when useful for applications beyond shares distribution (e.g.
@@ -1698,6 +1708,7 @@ void sched_fork(struct task_struct *p)
 {
 	unsigned long flags;
 	int cpu = get_cpu();
+        printk("DEBUGging task_FORK 1`\n");
 
 	__sched_fork(p);
 	/*
@@ -1733,9 +1744,17 @@ void sched_fork(struct task_struct *p)
 		p->sched_reset_on_fork = 0;
 	}
 
-	if (!rt_prio(p->prio))
-		p->sched_class = &fair_sched_class;
-
+        printk("DEBUGging task_fork\n");
+	if (!rt_prio(p->prio)) {
+	  if(p->policy == SCHED_MYCFS) {
+            printk(KERN_ALERT "DEBUG FORK Setting task to myfair sched\n");
+	    p->sched_class = &mycfs_sched_class;
+          }
+	  else {
+            //            printk(KERN_ALERT "DEBUG FORK Setting task to fair sched\n");
+            p->sched_class = &fair_sched_class;
+          }
+        }
 	if (p->sched_class->task_fork)
 		p->sched_class->task_fork(p);
 
@@ -1781,6 +1800,7 @@ void wake_up_new_task(struct task_struct *p)
 	struct rq *rq;
 
 	raw_spin_lock_irqsave(&p->pi_lock, flags);
+        //        printk(KERN_ALERT "DEBUG CORE wakeup\n");
 #ifdef CONFIG_SMP
 	/*
 	 * Fork balancing, do it here and not earlier because:
@@ -4036,28 +4056,33 @@ recheck:
 	}
 	on_rq = p->on_rq;
 	running = task_current(rq, p);
+        printk(KERN_ALERT "Outside here 1\n");
 	if (on_rq)
 		dequeue_task(rq, p, 0);
+        printk(KERN_ALERT "Outside here 2\n");
 	if (running)
 		p->sched_class->put_prev_task(rq, p);
 
+        printk(KERN_ALERT "Outside here 3\n");
 	p->sched_reset_on_fork = reset_on_fork;
 
 	oldprio = p->prio;
 	prev_class = p->sched_class;
 	__setscheduler(rq, p, policy, param->sched_priority);
 
+        printk(KERN_ALERT "Outside here 4\n");
 	if (running)
 		p->sched_class->set_curr_task(rq);
+        printk(KERN_ALERT "Outside here 5\n");
 	if (on_rq)
 		enqueue_task(rq, p, 0);
         
-        printk(KERN_ALERT "Outside here\n");
 	check_class_changed(rq, p, prev_class, oldprio);
 	task_rq_unlock(rq, p, &flags);
 
 	rt_mutex_adjust_pi(p);
 
+        printk(KERN_ALERT "Outside here 6\n");
 	return 0;
 }
 
@@ -4142,10 +4167,17 @@ SYSCALL_DEFINE2(sched_setparam, pid_t, pid, struct sched_param __user *, param)
 	return do_sched_setscheduler(pid, -1, param);
 }
 
+SYSCALL_DEFINE2(sched_setlimit,pid_t, pid,int, limit)
+{
+  printk("DEBUG SCALL Reached Successfully\n");
+  return 123;
+}
+
 /*
  * sys_sched_getscheduler - get the policy (scheduling class) of a thread
  * @pid: the pid in question.
  */
+
 SYSCALL_DEFINE1(sched_getscheduler, pid_t, pid)
 {
 	struct task_struct *p;
