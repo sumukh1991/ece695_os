@@ -1055,27 +1055,28 @@ struct mycfsnode {
 
 
 struct sched_mycfs_entity {
-	struct load_weight	load;		/* for load-balancing */
-	struct mycfsnode	run_node;
-	struct list_head	group_node;
-	unsigned int		on_rq;
+  struct load_weight	load;		/* for load-balancing */
+  struct mycfsnode	run_node;
+  struct list_head	group_node;
+  unsigned int		on_rq;
 
-	u64			exec_start;
-	u64			sum_exec_runtime;
-	u64			vruntime;
-	u64			prev_sum_exec_runtime;
+  u64			exec_start;
+  u64			sum_exec_runtime;
+  u64			vruntime;
+  u64			prev_sum_exec_runtime;
 
-	u64			nr_migrations;
+  long 			gruntime;
+  long			prev_gruntime;
+  int limit;
+  struct mycfs_rq		*mycfs_rq;
 
-	struct mycfs_rq		*mycfs_rq;
-
-//#ifdef CONFIG_FAIR_GROUP_SCHED
-//        struct sched_entity	*parent;
-//        /* rq on which this entity is (to be) queued: */
-//        struct cfs_rq		*cfs_rq;
-//        /* rq "owned" by this entity/group: */
-//        struct cfs_rq		*my_q;
-//#endif
+  //#ifdef CONFIG_FAIR_GROUP_SCHED
+  //        struct sched_entity	*parent;
+  //        /* rq on which this entity is (to be) queued: */
+  //        struct cfs_rq		*cfs_rq;
+  //        /* rq "owned" by this entity/group: */
+  //        struct cfs_rq		*my_q;
+  //#endif
 };
 //ECE695 - END
 
@@ -1095,7 +1096,7 @@ struct task_struct {
 	atomic_t usage;
 	unsigned int flags;	/* per process flags, defined below */
 	unsigned int ptrace;
-
+  int glimit;
 #ifdef CONFIG_SMP
 	struct llist_node wake_entry;
 	int on_cpu;

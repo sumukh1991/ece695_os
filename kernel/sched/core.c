@@ -521,6 +521,7 @@ void resched_task(struct task_struct *p)
 	if (test_tsk_need_resched(p))
 		return;
 
+        printk("DEBUG RESCHED in resched in config smp\n");
 	set_tsk_need_resched(p);
 
 	cpu = task_cpu(p);
@@ -604,6 +605,7 @@ static void wake_up_idle_cpu(int cpu)
 	 * lockless. The worst case is that the other CPU runs the
 	 * idle task through an additional NOOP schedule()
 	 */
+        printk("DEBUG RESCHED in wakupidlecpu\n");
 	set_tsk_need_resched(rq->idle);
 
 	/* NEED_RESCHED must be visible before we test polling */
@@ -695,6 +697,7 @@ void sched_avg_update(struct rq *rq)
 void resched_task(struct task_struct *p)
 {
 	assert_raw_spin_locked(&task_rq(p)->lock);
+        printk("DEBUG RESCHED in resched task\n");
 	set_tsk_need_resched(p);
 }
 #endif /* CONFIG_SMP */
@@ -952,6 +955,7 @@ static inline void check_class_changed(struct rq *rq, struct task_struct *p,
 void check_preempt_curr(struct rq *rq, struct task_struct *p, int flags)
 {
 	const struct sched_class *class;
+        printk("DEBUG RESCHED in check_preempt curr\n");
 
 	if (p->sched_class == rq->curr->sched_class) {
 		rq->curr->sched_class->check_preempt_curr(rq, p, flags);
@@ -960,6 +964,7 @@ void check_preempt_curr(struct rq *rq, struct task_struct *p, int flags)
 			if (class == rq->curr->sched_class)
 				break;
 			if (class == p->sched_class) {
+                          printk("DEBUG RESCHED innner in check_preempt_curr\n");
 				resched_task(rq->curr);
 				break;
 			}
@@ -1629,8 +1634,9 @@ static void __sched_fork(struct task_struct *p)
 	p->mycfs_se.exec_start            = 0;
 	p->mycfs_se.sum_exec_runtime      = 0;
 	p->mycfs_se.prev_sum_exec_runtime = 0;
-	p->mycfs_se.nr_migrations         = 0;
 	p->mycfs_se.vruntime              = 0;
+//        p->mycfs_se.gruntime              = 0;
+//        p->mycfs_se.prev_gruntime              = 0;
         //ECE695OS End
 
 
@@ -2945,15 +2951,19 @@ pick_next_task(struct rq *rq)
 	 * the fair class we can call that function directly:
 	 */
 	if (likely(rq->nr_running == rq->cfs.h_nr_running)) {
+          //          printk("DEBUG RESCHED in fair next task pick\n");
 		p = fair_sched_class.pick_next_task(rq);
 		if (likely(p))
 			return p;
 	}
 
 	for_each_class(class) {
-		p = class->pick_next_task(rq);
-		if (p)
-			return p;
+          p = class->pick_next_task(rq);
+          if (p) {
+	    if(p->policy == SCHED_MYCFS)
+	      printk("DEBUG RESCHEDE in not fair next task pick\n");
+            return p;
+          }
 	}
 
 	BUG(); /* the idle class will always have a runnable task */
@@ -3053,11 +3063,13 @@ need_resched:
 		idle_balance(cpu, rq);
 
 	put_prev_task(rq, prev);
+        
 	next = pick_next_task(rq);
 	clear_tsk_need_resched(prev);
 	rq->skip_clock_update = 0;
 
 	if (likely(prev != next)) {
+          //          printk(KERN_ALERT "Done RESCHEDE got diff task from  pick_next_task \n");
 		rq->nr_switches++;
 		rq->curr = next;
 		++*switch_count;
@@ -3077,8 +3089,10 @@ need_resched:
 	post_schedule(rq);
 
 	sched_preempt_enable_no_resched();
-	if (need_resched())
+	if (need_resched()){
+          printk(KERN_ALERT "DEBUG RISK need_Resched = true\n");
 		goto need_resched;
+        }
 }
 
 static inline void sched_submit_work(struct task_struct *tsk)
@@ -3896,6 +3910,8 @@ __setscheduler(struct rq *rq, struct task_struct *p, int policy, int prio)
 	  printk(KERN_ALERT "DEBUG Swtiching class to mycfs class\n");
           //	      p->sched_class = &fair_sched_class;
 		      p->sched_class = &mycfs_sched_class;
+                      p->mycfs_se.gruntime = 0;
+                      p->mycfs_se.prev_gruntime              = 0;
 	}
 	else 
           p->sched_class = &fair_sched_class;
@@ -4097,7 +4113,8 @@ recheck:
 int sched_setscheduler(struct task_struct *p, int policy,
 		       const struct sched_param *param)
 {
-  printk(KERN_ALERT "Calling setschduler with policy %d\n",policy);
+  printk(KERN_ALERT "Calling setschduler on task w pid = %d with policy %d \n",p->pid,policy);
+  printk(KERN_ALERT "DEBUG gruntime in setscheduler, set limit = %d, glimit = %d  for task %x, se %x, pid %d\n",p->mycfs_se.limit,p->glimit,(unsigned int)p,(unsigned int)&p->mycfs_se,p->pid);
 	return __sched_setscheduler(p, policy, param, true);
 }
 EXPORT_SYMBOL_GPL(sched_setscheduler);
@@ -4169,7 +4186,14 @@ SYSCALL_DEFINE2(sched_setparam, pid_t, pid, struct sched_param __user *, param)
 
 SYSCALL_DEFINE2(sched_setlimit,pid_t, pid,int, limit)
 {
-  printk("DEBUG SCALL Reached Successfully\n");
+  struct task_struct *p;
+  p = pid_task(find_vpid(pid), PIDTYPE_PID); 
+// p = container_of(&pid,struct task_struct,pid);
+  p->mycfs_se.limit = limit;
+  p->glimit = limit;
+  //  printk(KERN_ALERT "DEBUG gruntime SCALL Reached Successfully, set limit = %d , prev runtime = %u (input limit was %d) for task %x, se %x, pid %d\n",p->mycfs_se.limit,p->mycfs_se.prev_sum_exec_runtime,limit,(unsigned int)p,(unsigned int)&p->mycfs_se,pid);
+  printk(KERN_ALERT "DEBUG gruntime SCALL Reached Successfully, set limit = %d, glimit = %d  (input limit was %d) for task %x, se %x, pid %d\n",p->mycfs_se.limit,p->glimit,limit,(unsigned int)p,(unsigned int)&p->mycfs_se,pid);
+  
   return 123;
 }
 

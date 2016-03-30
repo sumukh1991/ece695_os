@@ -53,6 +53,18 @@ static inline struct mycfs_rq *mycfs_rq_of(struct sched_mycfs_entity *se)
   return &rq->mycfs;
 }
 
+
+struct sched_mycfs_entity *__pick_first_entity_mycfs(struct mycfs_rq *cfs_rq)
+{
+  struct mycfsnode *left = cfs_rq->leftmost;
+
+  printk(KERN_ALERT "Done entering __pick_first_entity_mycfs \n");
+	if (!left)
+		return NULL;
+
+	return container_of(left, struct sched_mycfs_entity, run_node);
+}
+
 /*
  * Enqueue an entity into the rb-tree:
  */
@@ -66,7 +78,7 @@ static void __mycfs_enqueue_entity(struct mycfs_rq *cfs_rq, struct sched_mycfs_e
 	int leftmost = 1;
         int inserted = 0;
 
-        printk(KERN_ALERT "DEBUG INSERT initial link is %x, se vruntime is %lx\n",(unsigned int)link,(unsigned long)se->vruntime);
+        printk(KERN_ALERT "DEBUG INSERT initial link is %x, se gruntime is %lx, limit = %d, glimit is %d ,\n",(unsigned int)link,(unsigned long)se->gruntime,se->limit,mycfs_task_of(se)->glimit);
         if(link)
           printk(KERN_ALERT "DEBUG INSERT initial link->next is %x\n",(unsigned int)link->next);
 
@@ -75,8 +87,9 @@ static void __mycfs_enqueue_entity(struct mycfs_rq *cfs_rq, struct sched_mycfs_e
 	 */
 	while (link) {
           tse = container_of(link, struct sched_mycfs_entity, run_node);
-          printk(KERN_ALERT "DEBUG INSERT in loop link->next is %x, run time comparision corresponds to %lx > %lx\n",(unsigned int)link->next,(unsigned long)tse->vruntime,(unsigned long)se->vruntime);
-	  if(tse->vruntime > se->vruntime)
+          printk(KERN_ALERT "DEBUG INSERT initial link is %x, se gruntime is %lx, limit = %d , se = %x\n",(unsigned int)link,(unsigned long)se->gruntime,se->limit, (unsigned int)tse);
+          printk(KERN_ALERT "DEBUG INSERT in loop link->next is %x, run time comparision corresponds to %lx > %lx\n",(unsigned int)link->next,(unsigned long)tse->gruntime,(unsigned long)se->gruntime);
+	  if(tse->gruntime >= se->gruntime)
 	    {
               if(leftmost)
                 break;
@@ -125,6 +138,7 @@ static void __mycfs_enqueue_entity(struct mycfs_rq *cfs_rq, struct sched_mycfs_e
 	  se->run_node.next=NULL;
 	}
 
+        cfs_rq->nr_running++;
 //        rb_link_node(&se->run_node, parent, link);
 //        rb_insert_color(&se->run_node, &cfs_rq->tasks_timeline);
 }
@@ -141,29 +155,9 @@ static void __mycfs_dequeue_entity(struct mycfs_rq *cfs_rq, struct sched_mycfs_e
 	}
         printk(KERN_ALERT "Done moving to front of queue\n");
 	mycfs_erase(&se->run_node);//, &cfs_rq->tasks_timeline);
+        cfs_rq->nr_running--;
 }
 
-
-/*
- * Update the current task's runtime statistics. Skip current tasks that
- * are not in our scheduling class.
- */
-static inline void
-__update_curr(struct mycfs_rq *cfs_rq, struct sched_mycfs_entity *curr,
-	      unsigned long delta_exec)
-{
-//        unsigned long delta_exec_weighted;
-// 
-//        schedstat_set(curr->statistics.exec_max,
-//        	      max((u64)delta_exec, curr->statistics.exec_max));
-// 
-//        curr->sum_exec_runtime += delta_exec;
-//        schedstat_add(cfs_rq, exec_clock, delta_exec);
-//        delta_exec_weighted = calc_delta_fair(delta_exec, curr);
-// 
-//        curr->vruntime += delta_exec_weighted;
-//        update_min_vruntime(cfs_rq);
-}
 
 static void update_curr(struct mycfs_rq *cfs_rq)
 {
@@ -180,6 +174,9 @@ static void update_curr(struct mycfs_rq *cfs_rq)
 	 * overflow on 32 bits):
 	 */
 	delta = (unsigned long)(now - curr->exec_start)/100;
+        //ECE695
+        curr->gruntime++;
+
 	if (!delta)
 		return;
  
@@ -291,6 +288,7 @@ set_next_entity(struct mycfs_rq *cfs_rq, struct sched_mycfs_entity *se)
 	}
 
         cfs_rq->curr = se;
+        se->prev_gruntime = se->gruntime;
 }
 
 
@@ -309,6 +307,53 @@ static void put_prev_entity(struct mycfs_rq *cfs_rq, struct sched_mycfs_entity *
 	
         cfs_rq->curr = NULL;
 }
+
+
+
+/*
+ * Preempt the current task with a newly woken task if needed:
+ */
+static void
+check_preempt_tick_mycfs(struct mycfs_rq *cfs_rq, struct sched_mycfs_entity *curr)
+{
+  unsigned long ideal_runtime, delta_exec,grt;
+	struct sched_mycfs_entity *se;
+	long int delta;
+        
+	//ideal_runtime = sched_slice(cfs_rq, curr);
+	delta_exec = curr->gruntime - curr->prev_gruntime;
+        printk(KERN_ALERT "DEBUG LIMIT task's runtime is %ld and delta is %ld, prev is %ld, calc delta is",curr->gruntime,delta_exec,curr->prev_gruntime,(curr->gruntime -curr->prev_gruntime) );
+	if (curr->gruntime > curr->limit) {
+          printk(KERN_ALERT "DEBUG PREEMPT preempted task due to limit exceeded\n");
+	  resched_task(rq_of(cfs_rq)->curr);
+		/*
+		 * The current task ran long enough, ensure it doesn't get
+		 * re-elected due to buddy favours.
+		 */
+	  //clear_buddies(cfs_rq, curr);
+		return;
+	}
+ 
+	/*
+	 * Ensure that a task that missed wakeup preemption by a
+	 * narrow margin doesn't have to wait for a full slice.
+	 * This also mitigates buddy induced latencies under load.
+	 */
+//	  if (delta_exec < )
+//		return;
+ 
+	se = __pick_first_entity_mycfs(cfs_rq);
+	delta = curr->gruntime - se->gruntime;
+ 
+	if (delta < 0)
+		return;
+ 
+        if (delta > 10) {//FIX
+          printk(KERN_ALERT "DEBUG PREEMPT preempted task due to unfair run time\n");
+          resched_task(rq_of(cfs_rq)->curr);
+        }
+}
+
 
 static void
 entity_tick(struct mycfs_rq *cfs_rq, struct sched_mycfs_entity *curr, int queued)
@@ -334,6 +379,7 @@ void init_mycfs_rq(struct mycfs_rq *cfs_rq)
 {
 	struct mycfsnode a;
 	cfs_rq->leftmost = NULL; 
+        cfs_rq->nr_running =0;
 	printk(KERN_ALERT "Debug: inside init_mycfs_rq leftmost = %x\n",(unsigned int) cfs_rq->leftmost);
         //	printk(KERN_ALERT "Debug: inside init_mycfs_rq leftmost = %x\n",cfs_rq->leftmost->next);
 	//	cfs_rq->min_vruntime = (u64)(-(1LL << 20));
@@ -562,7 +608,7 @@ static void task_tick_mycfs(struct rq *rq, struct task_struct *curr, int queued)
 	struct mycfs_rq *cfs_rq;
 	struct sched_mycfs_entity *se = &curr->mycfs_se;
  
-        printk(KERN_ALERT "Done entering task_tick_mycfs \n");
+        printk(KERN_ALERT "Done TICK entering task_tick_mycfs \n");
 	for_each_sched_entity(se) {
           cfs_rq = mycfs_rq_of(se);
         update_curr(cfs_rq);
@@ -572,8 +618,8 @@ static void task_tick_mycfs(struct rq *rq, struct task_struct *curr, int queued)
 //        update_cfs_rq_blocked_load(cfs_rq, 1);
 //        update_cfs_shares(cfs_rq);
 // 
-//        if (cfs_rq->nr_running > 1)
-//        	check_preempt_tick(cfs_rq, curr);
+        if (cfs_rq->nr_running > 1)
+          check_preempt_tick_mycfs(cfs_rq, &curr->mycfs_se);
 	}
         
 }
@@ -680,8 +726,10 @@ static void switched_to_mycfs(struct rq *rq, struct task_struct *p)
 	 * kick off the schedule if running, otherwise just see
 	 * if we can still preempt the current task.
 	 */
-	if (rq->curr == p)
-		resched_task(rq->curr);
+	if (rq->curr == p) {
+          printk(KERN_ALERT "Done CALLING RESCHED entering switched_to_mycfs\n");
+          resched_task(rq->curr); 
+        }
 	else
 		check_preempt_curr(rq, p, 0);
 }
@@ -701,16 +749,6 @@ static unsigned int get_rr_interval_mycfs(struct rq *rq, struct task_struct *tas
         return rr_interval;
 }
 
-struct sched_mycfs_entity *__pick_first_entity_mycfs(struct mycfs_rq *cfs_rq)
-{
-  struct mycfsnode *left = cfs_rq->leftmost;
-
-  printk(KERN_ALERT "Done entering __pick_first_entity_mycfs \n");
-	if (!left)
-		return NULL;
-
-	return container_of(left, struct sched_mycfs_entity, run_node);
-}
 
 /*
  * Pick the next process, keeping these things in mind, in this order:
@@ -724,7 +762,7 @@ static struct sched_mycfs_entity *pick_next_entity_mycfs(struct mycfs_rq *cfs_rq
         struct sched_mycfs_entity *se = __pick_first_entity_mycfs(cfs_rq);
 //        struct sched_mycfs_entity *left = se;
 
-        printk(KERN_ALERT "Done entering pick_next_entity_mycfs \n");
+        printk(KERN_ALERT "Done TICK entering pick_next_entity_mycfs \n");
 
 	printk(KERN_ALERT "Debug: Inside pick_next_entity_mycfs, first is %x\n",(unsigned int)se);
 // 

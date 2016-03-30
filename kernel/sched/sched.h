@@ -328,6 +328,7 @@ struct mycfs_rq {
   //	struct rb_root tasks_timeline;
 	struct mycfsnode *leftmost;
   //	struct mycfsnode *rightmost;
+  unsigned int nr_running;
 
 	/*
 	 * 'curr' points to currently running entity on this cfs_rq.
