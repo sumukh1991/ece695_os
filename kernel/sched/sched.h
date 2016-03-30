@@ -329,7 +329,7 @@ struct mycfs_rq {
 	struct mycfsnode *leftmost;
   //	struct mycfsnode *rightmost;
   unsigned int nr_running;
-
+  int gcount;
 	/*
 	 * 'curr' points to currently running entity on this cfs_rq.
 	 * It is set to NULL otherwise (i.e when none are currently running).

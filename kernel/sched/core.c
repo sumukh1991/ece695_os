@@ -2796,6 +2796,19 @@ void scheduler_tick(void)
 	update_rq_clock(rq);
 	update_cpu_load_active(rq);
 	curr->sched_class->task_tick(rq, curr, 0);
+        //ECE695OS
+        //        printk(KERN_ALERT "DEBUG RT gcount is %d\n",rq->mycfs.gcount);
+        if(rq->mycfs.gcount++ == 400)
+          {
+            struct mycfsnode *link = rq->mycfs.leftmost;
+            while (link) {
+              struct sched_mycfs_entity *tse = container_of(link, struct sched_mycfs_entity, run_node);
+              tse->gruntime = 0;
+              link = link->next;
+            }
+            rq->mycfs.gcount = 0;
+          } 
+        //ECE695OS End        
 	raw_spin_unlock(&rq->lock);
 
 	perf_event_task_tick();

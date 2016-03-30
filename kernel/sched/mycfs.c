@@ -19,8 +19,19 @@ static struct mycfsnode* mycfs_next(struct mycfsnode *node) {
   return node->next;
 }
 
-static void mycfs_erase(struct mycfsnode *node) {
-	//return node->next;
+static void mycfs_erase(struct mycfsnode *node,struct mycfs_rq *cfs_rq) {
+	struct mycfsnode *link = cfs_rq->leftmost;
+	struct mycfsnode *link_prev = cfs_rq->leftmost;
+
+	while (link) {
+	  if(link == node)
+	    {
+              link_prev->next = node->next;
+              break;
+            }//	      if(link)
+          link_prev = link;
+          link = link->next;
+	}
 }
 
 const struct sched_class mycfs_sched_class;
@@ -63,6 +74,15 @@ struct sched_mycfs_entity *__pick_first_entity_mycfs(struct mycfs_rq *cfs_rq)
 		return NULL;
 
 	return container_of(left, struct sched_mycfs_entity, run_node);
+}
+
+struct sched_mycfs_entity *__pick_next_entity_mycfs(struct sched_mycfs_entity *se)
+{
+  struct mycfsnode *next = se->run_node.next;
+  if (!next)
+    return NULL;
+  
+  return container_of(next, struct sched_mycfs_entity, run_node);
 }
 
 /*
@@ -154,7 +174,7 @@ static void __mycfs_dequeue_entity(struct mycfs_rq *cfs_rq, struct sched_mycfs_e
                 printk(KERN_ALERT "DEBUG MYCFS Done moving to front of queue\n");
 	}
         printk(KERN_ALERT "Done moving to front of queue\n");
-	mycfs_erase(&se->run_node);//, &cfs_rq->tasks_timeline);
+	mycfs_erase(&se->run_node,cfs_rq);//, &cfs_rq->tasks_timeline);
         cfs_rq->nr_running--;
 }
 
@@ -177,16 +197,16 @@ static void update_curr(struct mycfs_rq *cfs_rq)
         //ECE695
         curr->gruntime++;
 
-	if (!delta)
-		return;
- 
-	//__update_curr(cfs_rq, curr, delta_exec);
-	curr->sum_exec_runtime += delta;
-//        schedstat_add(cfs_rq, exec_clock, delta_exec);
-//        delta_exec_weighted = calc_delta_fair(delta_exec, curr);
- 
-	curr->vruntime += delta;
-	curr->exec_start = now;
+//FIX         if (!delta)
+//FIX         	return;
+//FIX  
+//FIX         //__update_curr(cfs_rq, curr, delta_exec);
+//FIX         curr->sum_exec_runtime += delta;
+//FIX //        schedstat_add(cfs_rq, exec_clock, delta_exec);
+//FIX //        delta_exec_weighted = calc_delta_fair(delta_exec, curr);
+//FIX  
+//FIX         curr->vruntime += delta;
+//FIX         curr->exec_start = now;
  
 }
 
@@ -316,13 +336,13 @@ static void put_prev_entity(struct mycfs_rq *cfs_rq, struct sched_mycfs_entity *
 static void
 check_preempt_tick_mycfs(struct mycfs_rq *cfs_rq, struct sched_mycfs_entity *curr)
 {
-  unsigned long ideal_runtime, delta_exec,grt;
+  unsigned long delta_exec;
 	struct sched_mycfs_entity *se;
 	long int delta;
         
 	//ideal_runtime = sched_slice(cfs_rq, curr);
 	delta_exec = curr->gruntime - curr->prev_gruntime;
-        printk(KERN_ALERT "DEBUG LIMIT task's runtime is %ld and delta is %ld, prev is %ld, calc delta is",curr->gruntime,delta_exec,curr->prev_gruntime,(curr->gruntime -curr->prev_gruntime) );
+        printk(KERN_ALERT "DEBUG LIMIT task's runtime is %ld and delta is %ld, prev is %ld, calc delta is %ld",curr->gruntime,delta_exec,curr->prev_gruntime,(curr->gruntime -curr->prev_gruntime) );
 	if (curr->gruntime > curr->limit) {
           printk(KERN_ALERT "DEBUG PREEMPT preempted task due to limit exceeded\n");
 	  resched_task(rq_of(cfs_rq)->curr);
@@ -355,9 +375,9 @@ check_preempt_tick_mycfs(struct mycfs_rq *cfs_rq, struct sched_mycfs_entity *cur
 }
 
 
-static void
-entity_tick(struct mycfs_rq *cfs_rq, struct sched_mycfs_entity *curr, int queued)
-{
+//static void
+//entity_tick(struct mycfs_rq *cfs_rq, struct sched_mycfs_entity *curr, int queued)
+//{
 //        update_curr(cfs_rq);
 // 
 //         * Ensure that runnable average is periodically updated.
@@ -367,7 +387,7 @@ entity_tick(struct mycfs_rq *cfs_rq, struct sched_mycfs_entity *curr, int queued
 // 
 //        if (cfs_rq->nr_running > 1)
 //        	check_preempt_tick(cfs_rq, curr);
-}
+//}
 
 
 __init void init_sched_mycfs_class(void)
@@ -377,7 +397,7 @@ __init void init_sched_mycfs_class(void)
 
 void init_mycfs_rq(struct mycfs_rq *cfs_rq)
 {
-	struct mycfsnode a;
+  //	struct mycfsnode a;
 	cfs_rq->leftmost = NULL; 
         cfs_rq->nr_running =0;
 	printk(KERN_ALERT "Debug: inside init_mycfs_rq leftmost = %x\n",(unsigned int) cfs_rq->leftmost);
@@ -607,9 +627,9 @@ static void task_tick_mycfs(struct rq *rq, struct task_struct *curr, int queued)
 {
 	struct mycfs_rq *cfs_rq;
 	struct sched_mycfs_entity *se = &curr->mycfs_se;
- 
-        printk(KERN_ALERT "Done TICK entering task_tick_mycfs \n");
-	for_each_sched_entity(se) {
+        //	struct sched_mycfs_entity *tse;
+
+        if(se) {
           cfs_rq = mycfs_rq_of(se);
         update_curr(cfs_rq);
 // 
@@ -765,6 +785,13 @@ static struct sched_mycfs_entity *pick_next_entity_mycfs(struct mycfs_rq *cfs_rq
         printk(KERN_ALERT "Done TICK entering pick_next_entity_mycfs \n");
 
 	printk(KERN_ALERT "Debug: Inside pick_next_entity_mycfs, first is %x\n",(unsigned int)se);
+        while(se) {
+          if(se->gruntime >= se->limit)
+            se = __pick_next_entity_mycfs(se);
+          else 
+            break;
+        }
+          
 // 
 //        /*
 //         * Avoid running the skip buddy, if running something else can
@@ -789,8 +816,8 @@ static struct sched_mycfs_entity *pick_next_entity_mycfs(struct mycfs_rq *cfs_rq
 //        	se = cfs_rq->next;
 // 
 //        clear_buddies(cfs_rq, se);
-	if (cfs_rq->next)// && wakeup_preempt_entity_mycfs(cfs_rq->next, left) < 1)
-          se = cfs_rq->next;
+//FIX        if (cfs_rq->next)// && wakeup_preempt_entity_mycfs(cfs_rq->next, left) < 1)
+//FIX          se = cfs_rq->next;
 	
 	printk(KERN_ALERT "Debug: Returned from pick_next_entity_mycfs, returning %x\n",(unsigned int) se);
 
@@ -810,14 +837,25 @@ static struct task_struct *pick_next_task_mycfs(struct rq *rq)
 		return NULL;
 
         printk(KERN_ALERT "DEBUG in pick next task mycs, lefmost = %x\n",(unsigned int)cfs_rq->leftmost);
-
+        
+//        if(cfs_rq->curr)
+//          if(cfs_rq->curr->gruntime < cfs_rq->curr->limit) 
+//            return mycfs_task_of(cfs_rq->curr);
+        
         do {
-        	se = pick_next_entity_mycfs(cfs_rq);
-        	set_next_entity(cfs_rq, se);
-                //        	cfs_rq = group_cfs_rq(se);
+          se = pick_next_entity_mycfs(cfs_rq);
+//          if(se->gruntime > se->limit) 
+//            return NULL;
+          if(!se) {
+            printk(KERN_ALERT "DEBUG returning NULL RT\n");
+            return NULL;
+          }
+          printk(KERN_ALERT "DEBUG RT gruntime and limit are %ld and %d, gcount is %d\n",se->gruntime,se->limit,cfs_rq->gcount);
+          set_next_entity(cfs_rq, se);
+          //        	cfs_rq = group_cfs_rq(se);
         } while (0);//FIXcfs_rq);
-// 
-	p = mycfs_task_of(se);
+        // 
+        p = mycfs_task_of(se);
 //        if (hrtick_enabled(rq))
 //        	hrtick_start_fair(rq, p);
 
