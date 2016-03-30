@@ -3082,7 +3082,7 @@ need_resched:
 	rq->skip_clock_update = 0;
 
 	if (likely(prev != next)) {
-          //          printk(KERN_ALERT "Done RESCHEDE got diff task from  pick_next_task \n");
+          //          printk(KERN_ALERT "DEBUG Done RESCHEDE got diff task from  pick_next_task \n");
 		rq->nr_switches++;
 		rq->curr = next;
 		++*switch_count;
@@ -4031,7 +4031,7 @@ recheck:
 		retval = security_task_setscheduler(p);
                 //                printk(KERN_ALERT "DEBUG inside __sched_setscheduler 5, retval = %d\n",retval);
 		if (retval){
-                  printk(KERN_ALERT "\nHERE\n");
+                  printk(KERN_ALERT "\nDEBUG HERE\n");
                   return retval;}
 	}
 
@@ -4085,24 +4085,24 @@ recheck:
 	}
 	on_rq = p->on_rq;
 	running = task_current(rq, p);
-        printk(KERN_ALERT "Outside here 1\n");
+        printk(KERN_ALERT "DEBUG Outside here 1\n");
 	if (on_rq)
 		dequeue_task(rq, p, 0);
-        printk(KERN_ALERT "Outside here 2\n");
+        printk(KERN_ALERT "DEBUG Outside here 2\n");
 	if (running)
 		p->sched_class->put_prev_task(rq, p);
 
-        printk(KERN_ALERT "Outside here 3\n");
+        printk(KERN_ALERT "DEBUG Outside here 3\n");
 	p->sched_reset_on_fork = reset_on_fork;
 
 	oldprio = p->prio;
 	prev_class = p->sched_class;
 	__setscheduler(rq, p, policy, param->sched_priority);
 
-        printk(KERN_ALERT "Outside here 4\n");
+        printk(KERN_ALERT "DEBUG Outside here 4\n");
 	if (running)
 		p->sched_class->set_curr_task(rq);
-        printk(KERN_ALERT "Outside here 5\n");
+        printk(KERN_ALERT "DEBUG Outside here 5\n");
 	if (on_rq)
 		enqueue_task(rq, p, 0);
         
@@ -4111,7 +4111,7 @@ recheck:
 
 	rt_mutex_adjust_pi(p);
 
-        printk(KERN_ALERT "Outside here 6\n");
+        printk(KERN_ALERT "DEBUG Outside here 6\n");
 	return 0;
 }
 
@@ -4126,7 +4126,7 @@ recheck:
 int sched_setscheduler(struct task_struct *p, int policy,
 		       const struct sched_param *param)
 {
-  printk(KERN_ALERT "Calling setschduler on task w pid = %d with policy %d \n",p->pid,policy);
+  printk(KERN_ALERT "DEBUG Calling setschduler on task w pid = %d with policy %d \n",p->pid,policy);
   printk(KERN_ALERT "DEBUG gruntime in setscheduler, set limit = %d, glimit = %d  for task %x, se %x, pid %d\n",p->mycfs_se.limit,p->glimit,(unsigned int)p,(unsigned int)&p->mycfs_se,p->pid);
 	return __sched_setscheduler(p, policy, param, true);
 }
